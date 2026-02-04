@@ -2,3 +2,4 @@
 *.swo
 *~
 .env
+birdnet-pi-data/
