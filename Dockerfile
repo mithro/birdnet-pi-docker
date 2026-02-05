@@ -40,8 +40,12 @@ RUN useradd -m -s /bin/bash birdnet \
 RUN printf '#!/bin/sh\necho "Etc/UTC"\n' > /usr/local/bin/timedatectl \
     && chmod +x /usr/local/bin/timedatectl
 
-# Clone BirdNET-Pi
+# Switch to birdnet user for installation
+# ENV USER is needed because Docker's USER instruction doesn't set $USER,
+# and the BirdNET-Pi config template uses $USER to set BIRDNET_USER
 USER birdnet
+ENV USER=birdnet
+ENV HOME=/home/birdnet
 WORKDIR /home/birdnet
 RUN git clone --depth=1 https://github.com/Nachtzuster/BirdNET-Pi.git
 
