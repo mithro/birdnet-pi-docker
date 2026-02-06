@@ -30,7 +30,8 @@ RUN rm -f /etc/systemd/system/*.wants/* \
     /lib/systemd/system/systemd-update-utmp*
 
 # Create birdnet user with passwordless sudo (installer requirement)
-RUN useradd -m -s /bin/bash birdnet \
+# Add to audio group for /dev/snd access at runtime
+RUN useradd -m -s /bin/bash -G audio birdnet \
     && echo "birdnet ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/birdnet \
     && chmod 0440 /etc/sudoers.d/birdnet
 
