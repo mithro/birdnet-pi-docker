@@ -16,7 +16,14 @@ BirdNET-Pi source code, and pushes it to
 
 ## Quick start
 
+BirdNET-Pi uses systemd inside the container, which requires the Docker
+daemon to default to host cgroup namespace mode:
+
 ```bash
+# Configure Docker for systemd containers (one-time setup)
+echo '{"default-cgroupns-mode": "host"}' | sudo tee /etc/docker/daemon.json
+sudo systemctl restart docker
+
 # Clone this repo
 git clone https://github.com/mithro/birdnet-pi-docker.git
 cd birdnet-pi-docker

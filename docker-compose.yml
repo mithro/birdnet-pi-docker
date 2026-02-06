@@ -3,7 +3,6 @@ services:
     image: ghcr.io/mithro/birdnet-pi:latest
     container_name: birdnet-pi
     privileged: true
-    cgroupns: host
     restart: unless-stopped
     ports:
       - "127.0.0.1:8080:80"
@@ -11,6 +10,7 @@ services:
     volumes:
       - ./birdnet-pi-data:/home/birdnet/BirdNET-Pi/birdsongs
       - /etc/localtime:/etc/localtime:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
     devices:
       - /dev/snd:/dev/snd
     tmpfs:
