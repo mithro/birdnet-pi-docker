@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     jq \
     ca-certificates \
+    gnupg \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -54,9 +55,11 @@ RUN git clone --depth=1 https://github.com/Nachtzuster/BirdNET-Pi.git
 WORKDIR /home/birdnet/BirdNET-Pi
 RUN bash scripts/install_birdnet.sh
 
-# Remove stub, clean up
+# Remove stub, install missing PHP extension, clean up
 USER root
-RUN rm -f /usr/local/bin/timedatectl
+RUN rm -f /usr/local/bin/timedatectl \
+    && apt-get update && apt-get install -y --no-install-recommends php-mbstring \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Expose web UI (Caddy) and Icecast stream
 EXPOSE 80 8081
