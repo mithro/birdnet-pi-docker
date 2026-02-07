@@ -54,8 +54,18 @@ sudo systemctl restart docker
 ```bash
 git clone https://github.com/mithro/birdnet-pi-docker.git ~/birdnet
 cd ~/birdnet
+
+# Extract the default config file (first time only)
+docker compose run --rm --entrypoint cat birdnet-pi \
+  /home/birdnet/BirdNET-Pi/birdnet.conf > birdnet.conf
+
+# Start BirdNET-Pi
 docker compose up -d
 ```
+
+The `birdnet.conf` file on the host is bind-mounted into the container,
+so your settings survive container recreations (e.g. after image
+updates).
 
 Verify the container is running (it should show status `Up`, not
 `Exited`):
@@ -176,8 +186,9 @@ docker compose pull
 docker compose up -d
 ```
 
-Your bird detection data is persisted in `./birdnet-pi-data/` and
-survives container recreations.
+Your bird detection data (`./birdnet-pi-data/`) and configuration
+(`./birdnet.conf`) are persisted on the host and survive container
+recreations.
 
 ## Troubleshooting
 
