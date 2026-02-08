@@ -124,16 +124,14 @@ sudo nginx -t && sudo systemctl reload nginx
 
 The BirdNET-Pi web UI is now accessible at `http://HOSTNAME/`.
 
-### 5. Configure BirdNET-Pi
+### 5. Configure the ALSA shared-access device
 
-Open the web UI and go to **Tools -> Settings**. Configure at minimum:
+BirdNET-Pi runs two concurrent audio consumers: `arecord` for
+recording/analysis and `ffmpeg` for the Icecast livestream. ALSA
+hardware devices (`hw:` / `plughw:`) only allow one reader at a time,
+so you need an ALSA `dsnoop` plugin to share the microphone.
 
-- **SITE_NAME** -- a descriptive name for this station
-- **LATITUDE** and **LONGITUDE** -- your location (used to filter
-  species by range)
-- **REC_CARD** -- your USB microphone's ALSA device
-
-To find your microphone's ALSA device name, run:
+First, find your USB microphone's ALSA card number:
 
 ```bash
 docker exec birdnet-pi arecord -l
@@ -145,8 +143,31 @@ This will output something like:
 card 3: Device [USB PnP Sound Device], device 0: USB Audio [USB Audio]
 ```
 
-The corresponding `REC_CARD` value would be `plughw:3,0` (card 3,
-device 0). The `plughw:` prefix enables automatic format conversion.
+The included `asoundrc` file configures a `dsnoop` device for card 3.
+If your mic is on a different card number, edit `asoundrc` and change
+`"hw:3,0"` to match your card.
+
+The `asoundrc` file is bind-mounted into the container at
+`/home/birdnet/.asoundrc` (read-only). It defines two virtual devices:
+
+- **`usb_mic_raw`** -- `dsnoop` device that enables shared read access
+  to the hardware
+- **`usb_mic`** -- `plug` wrapper that handles automatic format
+  conversion (e.g. mono mic to stereo when requested by applications)
+
+### 6. Configure BirdNET-Pi
+
+Open the web UI and go to **Tools -> Settings**. Configure at minimum:
+
+- **SITE_NAME** -- a descriptive name for this station
+- **LATITUDE** and **LONGITUDE** -- your location (used to filter
+  species by range)
+- **REC_CARD** -- set to `usb_mic` (the dsnoop device from `asoundrc`)
+
+> **Important:** Do not use `plughw:3,0` or similar hardware device
+> names for `REC_CARD`. This will cause "Device or resource busy"
+> errors when both recording and livestream try to access the mic
+> simultaneously. Always use the `usb_mic` dsnoop device.
 
 After saving settings, the BirdNET-Pi services will restart and begin
 recording and analysing audio.
@@ -186,9 +207,8 @@ docker compose pull
 docker compose up -d
 ```
 
-Your bird detection data (`./birdnet-pi-data/`) and configuration
-(`./birdnet.conf`) are persisted on the host and survive container
-recreations.
+Your bird detection data (`./data/`) and configuration (`./birdnet.conf`)
+are persisted on the host and survive container recreations.
 
 ## Troubleshooting
 
@@ -207,11 +227,19 @@ Check that:
 
 1. A USB microphone is plugged in and visible with `lsusb`
 2. `/dev/snd` devices exist on the host: `ls -la /dev/snd/`
-3. The correct `REC_CARD` is set in BirdNET-Pi settings
-4. Test recording from inside the container:
+3. `REC_CARD` is set to `usb_mic` (not `default` or a `plughw:` device)
+4. The `asoundrc` card number matches your actual mic (`arecord -l`)
+5. Test recording from inside the container:
    ```bash
-   docker exec birdnet-pi sudo -u birdnet arecord -D plughw:3,0 -d 3 -f S16_LE /tmp/test.wav
+   docker exec birdnet-pi sudo -u birdnet arecord -D usb_mic -d 3 -f S16_LE /tmp/test.wav
    ```
+
+### "Device or resource busy" errors
+
+Both `arecord` (recording) and `ffmpeg` (livestream) need simultaneous
+mic access. If `REC_CARD` is set to a raw ALSA device like `plughw:3,0`,
+only one process can open it at a time. Set `REC_CARD=usb_mic` to use
+the shared dsnoop device configured in `asoundrc`.
 
 ### Web UI shows "Welcome to nginx!" instead of BirdNET-Pi
 
