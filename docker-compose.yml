@@ -8,7 +8,8 @@ services:
       - "127.0.0.1:8080:80"
       - "127.0.0.1:8081:8081"
     volumes:
-      - ./birdnet-pi-data:/home/birdnet/BirdSongs
+      - ./data/StreamData:/home/birdnet/BirdSongs/StreamData
+      - ./data/By_Date:/home/birdnet/BirdSongs/Extracted/By_Date
       - ./birdnet.conf:/home/birdnet/BirdNET-Pi/birdnet.conf
       - ./asoundrc:/home/birdnet/.asoundrc:ro
       - /etc/localtime:/etc/localtime:ro
