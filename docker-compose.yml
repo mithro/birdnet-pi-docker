@@ -10,6 +10,7 @@ services:
     volumes:
       - ./birdnet-pi-data:/home/birdnet/BirdSongs
       - ./birdnet.conf:/home/birdnet/BirdNET-Pi/birdnet.conf
+      - ./asoundrc:/home/birdnet/.asoundrc:ro
       - /etc/localtime:/etc/localtime:ro
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
     devices:

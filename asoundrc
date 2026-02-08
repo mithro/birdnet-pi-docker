@@ -1,0 +1,12 @@
+pcm.usb_mic_raw {
+    type dsnoop
+    ipc_key 1234
+    slave {
+        pcm "hw:3,0"
+    }
+}
+
+pcm.usb_mic {
+    type plug
+    slave.pcm "usb_mic_raw"
+}
